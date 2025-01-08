@@ -45,7 +45,7 @@
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
 	                        <?php
 	                        if(isset($_SESSION["loggedin"]) && $_SESSION["loggedin"] === true){
-		                        echo "<li><a class='dropdown-item' href='data.php'>Dane użytkownika</a></li>";
+		                        echo "<li><a class='dropdown-item' href='userData.php'>Dane użytkownika</a></li>";
 		                        echo "<li><a class='dropdown-item' href='history.php'>Historia zamówień</a></li>";
 		                        echo "<li><a class='dropdown-item' href='login.php?action=wyloguj'>Wyloguj się</a></li>";
 	                        } else {

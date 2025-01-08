@@ -1,5 +1,6 @@
 <?php
 	include_once "classes/Database.php";
+	include_once "classes/User.php";
 	$db = new Database("localhost", "root", "", "klienci");
 class UserManager
 {
@@ -76,11 +77,98 @@ class UserManager
 
 	public function getLoggedInUser($db, $sessionId){
 		$userId = -1;
-		if ($result = $db->mysqli->query("SELECT userId FROM logged_in_users WHERE sessionId = $sessionId")) {
+		if ($result = $db->getMysqli()->query("SELECT userId FROM logged_in_users WHERE sessionId = '$sessionId'")) {
 			$row = $result->fetch_object();
 			$userId = $row->userId;
 		}
 		return $userId;
+	}
+
+	public function getLoggedInUserData($db, $userId) {
+		if ($userId <= 0) {
+			return null;
+		}
+
+		$sql = "SELECT userName, fullName, email, status, passwd, date FROM users WHERE id = ?";
+		$stmt = $db->getMysqli()->prepare($sql);
+		$stmt->bind_param("i", $userId);
+		$stmt->execute();
+		$result = $stmt->get_result();
+
+		if ($result->num_rows > 0) {
+			return $result->fetch_assoc();
+		}
+
+		return null;
+	}
+
+	public function getLoggedInUserDate($db, $userId) {
+		if ($userId <= 0) {
+			return null;
+		}
+
+		$sql = "SELECT lastUpdate FROM logged_in_users WHERE userId = '$userId'";
+		$result = $db->getMysqli()->query($sql);
+		if($result->num_rows > 0){
+			$row = $result->fetch_object();
+			$lastUpdate = $row->lastUpdate;
+			return $lastUpdate;
+		}
+
+		return null;
+	}
+
+	public function updateExistingUser($db, $userId){
+		$args = [
+			'userName' => ['filter' => FILTER_VALIDATE_REGEXP,
+				'options' => ['regexp' => '/^[0-9A-Za-z_-]{2,25}$/']],
+			'fullName' => ['filter' => FILTER_VALIDATE_REGEXP,
+				'options' => ['regexp' => '/^[A-ZŁŚŻŹĆŃÓ][a-ząęłńśćźżó-]{1,24} [A-ZŁŚŻŹĆŃÓ][a-ząęłńśćźżó-]{1,24}$/']],
+			'email' => ['filter' => FILTER_VALIDATE_EMAIL]
+		];
+		//Sprawdź poprawność edytowanych danych
+		$dane = filter_input_array(INPUT_POST, $args);
+		$errors = "";
+		//Pobierz dane usera przed ich usunięciem
+		$previousData = $this->getLoggedInUserData($db, $userId);
+
+		$userName = $dane['userName'];
+		$email = $dane['email'];
+		$fullName = $dane['fullName'];
+
+		$passwd = $previousData['passwd'];
+		$status = $previousData['status'];
+		$date = $previousData['date'];
+		$previousUserName = $previousData['userName'];
+		$previousEmail = $previousData['email'];
+		$previousFullName = $previousData['fullName'];
+
+		foreach ($dane as $key => $val) {
+			if ($val === false || $val === NULL || $val === '') {
+				$errors .= "<br>" . $key;
+			}
+		}
+
+		if ($errors === "") {
+			$db->delete("DELETE FROM users WHERE id = '$userId'");
+
+			if($db->checkUserExists($email, $userName) === true){
+				echo "<div class='alert alert-danger m-5'>Istnieje użytkownik o podanym emailu lub loginie!</div>";
+				$sql = "INSERT INTO users VALUES ('$userId', '$previousUserName', '$previousFullName', '$previousEmail', '$passwd', '$status', '$date')";
+				$db->insert($sql);
+				exit();
+			}
+
+			$sql = "INSERT INTO users VALUES ('$userId', '$userName', '$fullName', '$email', '$passwd', '$status', '$date')";
+			if($db->insert($sql)){
+				echo "<div class='alert alert-success m-5'>Dane zmienione pomyślnie!</div>";
+				sleep(0.5);
+				echo '<meta http-equiv="refresh" content="0;url=userData.php">';
+				exit();
+			}
+		} else {
+			echo "<div class='alert alert-danger m-5'><b>Błędne dane:</b> $errors</div>";
+		}
 	}
 }
 

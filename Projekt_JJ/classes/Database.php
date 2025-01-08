@@ -72,11 +72,45 @@ class Database {
 			return false;
 	}
 
+	public function update($sql) {
+		if ($this->mysqli->query($sql))
+			return true;
+		else
+			return false;
+	}
+
 	public function delete($sql) {
 		if ($this->mysqli->query($sql))
 			return true;
 		else
 			return false;
+	}
+
+	public function selectOrder($sql) {
+		$content = "";
+		$fields = ['orderId', 'userId', 'kursy', 'fullName', 'email', 'phone', 'address', 'delivery', 'total', 'orderDate'];
+		$pola = ['Nr zamówienia', 'Id użytkownika', 'Kursy', 'Imię i nazwisko', 'Email', 'Telefon', 'Adres', 'Dostawa', 'Suma', 'Data'];
+		if ($result = $this->mysqli->query($sql)) {
+			$colnumber = count($fields);
+
+			$content .= "<table class='table table-bordered'><tbody><tr class='table-primary'>";
+			foreach ($pola as $field) {
+				$content .= "<th>$field</th>";
+			}
+			$content .= "</tr>";
+
+			while ($row = $result->fetch_object()) {
+				$content .= "<tr>";
+				for ($i = 0; $i < $colnumber; $i++) {
+					$field = $fields[$i];
+					$content .= "<td>" . $row->$field . "</td>";
+				}
+				$content .= "</tr>";
+			}
+			$content .= "</tbody></table>";
+			$result->close();
+		}
+		return $content;
 	}
 
 	public function getMysqli() {
@@ -101,5 +135,7 @@ class Database {
 		// Jeśli znaleziono wiersze, zwróć true
 		return $row['count'] > 0;
 	}
+
+
 }
 ?>

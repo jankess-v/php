@@ -1,9 +1,10 @@
 <?php
 	session_start();
 	include_once "classes/RegistrationForm.php";
-	include_once "classes/Database.php";
-	include_once "classes/User.php";
+	include_once "classes/UserManager.php";
+	include_once "classes/OrderManager.php";
 	$db = new Database("localhost", "root", "", "klienci");
+	if(isset($_SESSION["loggedin"]) && $_SESSION["loggedin"] === true){
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -12,7 +13,7 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
 	<meta name="description" content/>
 	<meta name="author" content/>
-	<title>Lingarium - Zarejestruj się</title>
+	<title>Lingarium - Historia zamówień</title>
 	<!-- Favicon-->
 	<link rel="icon" type="image/x-icon" href="assets/favicon.ico"/>
 	<!-- Bootstrap icons-->
@@ -22,12 +23,12 @@
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 	<script defer src="js/scripts.js"></script>
 </head>
-<body class="d-flex flex-column">
+<body class="d-flex flex-column min-vh-100">
 <main class="flex-shrink-0">
 	<!-- Navigation-->
 	<nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
 		<div class="container px-5">
-			<a class="navbar-brand" href="#scroll-down">Zarejestruj się</a>
+			<a class="navbar-brand" href="#scroll-down">Zamów Kurs</a>
 			<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarResponsive"
 			        aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation"><span
 					class="navbar-toggler-icon"></span></button>
@@ -51,7 +52,7 @@
 							if(isset($_SESSION["loggedin"]) && $_SESSION["loggedin"] === true){
 								echo "<li><a class='dropdown-item' href='userData.php'>Dane użytkownika</a></li>";
 								echo "<li><a class='dropdown-item' href='history.php'>Historia zamówień</a></li>";
-								echo "<li><a class='dropdown-item' href='login.php?action=wyloguj'>Historia zamówień</a></li>";
+								echo "<li><a class='dropdown-item' href='login.php?action=wyloguj'>Wyloguj się</a></li>";
 							} else {
 								echo "<li><a class='dropdown-item' href='login.php'>Zaloguj się</a></li>";
 								echo "<li><a class='dropdown-item' href='register.php'>Zarejestruj się</a></li>";
@@ -63,35 +64,55 @@
 			</div>
 		</div>
 	</nav>
-	<!-- Page content-->
-	<section class="py-5 formbg">
-		<div class="container px-5">
-			<!-- Register form-->
-			<div class="bg-light rounded-3 py-5 px-4 px-md-5 mb-5">
-				<div class="row gx-5 justify-content-center">
-					<div class="col-lg-8 col-xl-6 justify-content-center">
-						<!--form-->
+	<?php
+	$um = new UserManager();
+	if(isset($_SESSION["loggedin"]) && $_SESSION["loggedin"] === true){
+		$userId = $um->getLoggedInUser($db, session_id());
+		$dane = $um->getLoggedInUserData($db, $userId);
+		?>
+		<!-- Page content-->
+		<section class="py-5 bg-dark">
+			<div class="container px-5">
+				<!-- Contact form-->
+				<div class="bg-light rounded-3 py-5 px-4 px-md-5 mb-5">
+					<div class="text-center mb-5">
+						<div class="feature bg-primary bg-gradient text-white rounded-3 mb-3"><i class="bi bi-bag-dash"></i>
+						</div>
+						<h1 class="fw-bolder">Historia zamówień</h1>
 						<?php
-							$form = new RegistrationForm();
-							if($action = filter_input(INPUT_POST, 'submit', FILTER_SANITIZE_FULL_SPECIAL_CHARS)) {
-								switch($action) {
-									case "Zarejestruj":
-										$user = $form->checkUser();
-										if($user === NULL) {
-											echo "<div class='alert alert-danger m-5'>Niepoprawne dane rejestracji!</div>";
-										} else {
-											$user->saveToDB($db);
-											echo "<div class='alert alert-success m-5'>Zarejestrowano!</div>";
-										}
-										break;
-								}
-							}
+							echo "<p class='lead fw-normal text-muted mb-3'>dla użytkownika ". $dane['userName'] . "</p>";
+							$om = new OrderManager();
+							$om->displayOrdersById($db, $userId);
 						?>
 					</div>
 				</div>
 			</div>
-		</div>
-	</section>
+		</section>
+	<?php } else { ?>
+		<section class="py-5 formbg">
+			<div class="container px-5">
+				<!-- Contact form-->
+				<div class="bg-light rounded-3 py-5 px-4 px-md-5 mb-5">
+					<div class="text-center mb-5">
+						<div class="feature bg-primary bg-gradient text-white rounded-3 mb-3">
+							<i class="bi bi-bag-dash"></i>
+						</div>
+						<h1 class="fw-bolder">Zamów kurs</h1>
+						<p class="lead fw-normal text-muted mb-0">już dziś</p>
+					</div>
+					<div class="row gx-5 justify-content-center">
+						<div class="col-lg-8 col-xl-6 text-center">
+							<p class="lead text-warning fw-bolder mb-0 fs-4">Aby przeglądać historię zamówień m</p>
+							<p class="small text-muted">
+								<a href="login.php" class="text-muted fs-6 lead">Przejdź do strony logowania</a>
+							</p>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+
+	<?php } ?>
 	<!-- Contact cards-->
 	<div class="container px-5">
 		<div class="row gx-5 row-cols-2 row-cols-lg-4 py-5 justify-content-center">
@@ -138,3 +159,8 @@
 <script src="https://cdn.startbootstrap.com/sb-forms-latest.js"></script>
 </body>
 </html>
+		<?php
+	} else {
+		header("location:index.php");
+	}
+?>

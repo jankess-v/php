@@ -34,6 +34,11 @@ class User {
 		$db->insert($sql);
 	}
 
+	public function saveToDBwithId($db, $userId) {
+		$sql = "INSERT INTO users VALUES ('$userId', '$this->userName', '$this->fullName', '$this->email', '$this->passwd', '$this->status', '$this->date')";
+		$db->insert($sql);
+	}
+
 	public static function getAllUsersFromDB($db) {
 		$sql = "SELECT * FROM users";
 		$fields = ["id", "userName", "fullName", "email", "passwd", "status", "data"];
@@ -100,5 +105,11 @@ class User {
 
 	public function getStatus() {
 		return $this->status;
-	}}
+	}
+
+	public function setDate($date)
+	{
+		$this->date = $date;
+	}
+}
 ?>

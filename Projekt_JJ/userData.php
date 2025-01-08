@@ -1,10 +1,11 @@
 <?php
 	session_start();
 	include_once "classes/RegistrationForm.php";
+	include_once "classes/UserManager.php";
 	include_once "classes/Database.php";
-	include_once "classes/User.php";
 	$db = new Database("localhost", "root", "", "klienci");
-?>
+if(isset($_SESSION["loggedin"]) && $_SESSION["loggedin"] === true){
+	?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -12,7 +13,7 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
 	<meta name="description" content/>
 	<meta name="author" content/>
-	<title>Lingarium - Zarejestruj się</title>
+	<title>Lingarium - Zamów kurs</title>
 	<!-- Favicon-->
 	<link rel="icon" type="image/x-icon" href="assets/favicon.ico"/>
 	<!-- Bootstrap icons-->
@@ -27,7 +28,7 @@
 	<!-- Navigation-->
 	<nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
 		<div class="container px-5">
-			<a class="navbar-brand" href="#scroll-down">Zarejestruj się</a>
+			<a class="navbar-brand" href="#scroll-down">Zamów Kurs</a>
 			<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarResponsive"
 			        aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation"><span
 					class="navbar-toggler-icon"></span></button>
@@ -51,7 +52,7 @@
 							if(isset($_SESSION["loggedin"]) && $_SESSION["loggedin"] === true){
 								echo "<li><a class='dropdown-item' href='userData.php'>Dane użytkownika</a></li>";
 								echo "<li><a class='dropdown-item' href='history.php'>Historia zamówień</a></li>";
-								echo "<li><a class='dropdown-item' href='login.php?action=wyloguj'>Historia zamówień</a></li>";
+								echo "<li><a class='dropdown-item' href='login.php?action=wyloguj'>Wyloguj się</a></li>";
 							} else {
 								echo "<li><a class='dropdown-item' href='login.php'>Zaloguj się</a></li>";
 								echo "<li><a class='dropdown-item' href='register.php'>Zarejestruj się</a></li>";
@@ -63,35 +64,72 @@
 			</div>
 		</div>
 	</nav>
+
 	<!-- Page content-->
 	<section class="py-5 formbg">
 		<div class="container px-5">
-			<!-- Register form-->
 			<div class="bg-light rounded-3 py-5 px-4 px-md-5 mb-5">
-				<div class="row gx-5 justify-content-center">
-					<div class="col-lg-8 col-xl-6 justify-content-center">
-						<!--form-->
-						<?php
-							$form = new RegistrationForm();
-							if($action = filter_input(INPUT_POST, 'submit', FILTER_SANITIZE_FULL_SPECIAL_CHARS)) {
-								switch($action) {
-									case "Zarejestruj":
-										$user = $form->checkUser();
-										if($user === NULL) {
-											echo "<div class='alert alert-danger m-5'>Niepoprawne dane rejestracji!</div>";
-										} else {
-											$user->saveToDB($db);
-											echo "<div class='alert alert-success m-5'>Zarejestrowano!</div>";
-										}
-										break;
+				<div class="text-center mb-5">
+					<h1 class="fw-bolder">Dane użytkownika</h1>
+				</div>
+				<?php
+					$um = new UserManager();
+					$loggedInUserId = $um->getLoggedInUser($db, session_id());
+					$lastLoginDate = $um->getLoggedInUserDate($db, $loggedInUserId);
+					if($loggedInUserId !== -1){
+						$userData = $um->getLoggedInUserData($db, $loggedInUserId);
+						echo '<div class="row gx-5 justify-content-center">';
+							echo '<div class="col-lg-8 col-xl-6">';
+								echo '<p class="lead fw-normal text-muted mb-2"><strong>Login:</strong> ' . htmlspecialchars($userData['userName']) . '</p>';
+								echo '<p class="lead fw-normal text-muted mb-2"><strong>Imię i nazwisko:</strong> ' . htmlspecialchars($userData['fullName']) . '</p>';
+								echo '<p class="lead fw-normal text-muted mb-2"><strong>Email:</strong> ' . htmlspecialchars($userData['email']) . '</p>';
+								if($userData['status'] == 1) {
+									echo '<p class="lead fw-normal text-muted mb-2"><strong>Status:</strong> ' . "Użytkownik" . '</p>';
+								} else {
+									echo '<p class="lead fw-normal text-muted mb-2"><strong>Status:</strong> ' . "Administrator" . '</p>';
 								}
-							}
-						?>
+								echo '<p class="lead fw-normal text-muted mb-2"><strong>Data założenia konta:</strong> ' . htmlspecialchars($userData['date']) . '</p>';
+								echo '<p class="lead fw-normal text-muted mb-2"><strong>Data ostatniego logowania:</strong> ' . htmlspecialchars($lastLoginDate) . '</p>';
+							echo '</div>';
+						echo '</div>';
+					}
+				?>
+				<div class="row gx-5 justify-content-center mt-4">
+					<div class="col-lg-8 col-xl-6">
+						<div class="text-center mb-5">
+							<h5 class="fw-bolder">Jeżeli chcesz zmienić dane, nadpisz je poniżej</h5>
+						</div>
+						<form method="post" action="userData.php">
+							<div class="form-floating mb-3">
+								<input class="form-control" id="fullName" name="fullName" type="text" placeholder="Imię i nazwisko"
+								       value="<?= htmlspecialchars($userData['fullName']) ?>" required>
+								<label for="fullName">Imię i nazwisko</label>
+							</div>
+							<div class="form-floating mb-3">
+								<input class="form-control" id="email" name="email" type="email" placeholder="Email"
+								       value="<?= htmlspecialchars($userData['email']) ?>" required>
+								<label for="email">Email</label>
+							</div>
+							<div class="form-floating mb-3">
+								<input class="form-control" id="userName" name="userName" type="userName" placeholder="Login"
+								       value="<?= htmlspecialchars($userData['userName']) ?>" required>
+								<label for="userName">Login</label>
+							</div>
+							<div class="d-grid">
+								<button class="btn btn-primary btn-lg" type="submit" name="update" value="Zaktualizuj">Zaktualizuj dane</button>
+							</div>
+							<?php
+                                if(filter_input(INPUT_POST, 'update', FILTER_SANITIZE_FULL_SPECIAL_CHARS) == "Zaktualizuj") {
+                                    $um->updateExistingUser($db, $loggedInUserId);
+                                }
+							?>
+						</form>
 					</div>
 				</div>
 			</div>
 		</div>
 	</section>
+
 	<!-- Contact cards-->
 	<div class="container px-5">
 		<div class="row gx-5 row-cols-2 row-cols-lg-4 py-5 justify-content-center">
@@ -138,3 +176,8 @@
 <script src="https://cdn.startbootstrap.com/sb-forms-latest.js"></script>
 </body>
 </html>
+ <?php
+} else {
+	header("location:index.php");
+}
+?>
