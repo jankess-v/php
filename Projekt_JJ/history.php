@@ -82,9 +82,39 @@
 						<?php
 							echo "<p class='lead fw-normal text-muted mb-3'>dla użytkownika ". $dane['userName'] . "</p>";
 							$om = new OrderManager();
-							$om->displayOrdersById($db, $userId);
+                            if($dane['status'] == 1) {
+	                            $om->displayOrdersById($db, $userId);
+                            } else if ($dane['status'] == 2) {
+                                $om->displayAllOrders($db);
 						?>
 					</div>
+                    <div class="text-center">
+                        <h3 class="fw-bolder mb-4">Usuwanie zamówień</h3>
+                        <form method="post" action="history.php">
+                            <div class="justify-content-around row">
+                                <div class="form-floating mb-3 input-control col-5">
+                                    <input class="form-control" id="id" name="id" type="text" placeholder="Nr zamówienia">
+                                    <label for="fullName">Nr zamówienia do usunięcia</label>
+                                </div>
+                                <div class="form-floating mb-3 input-control col-5">
+                                    <div class="d-grid">
+                                        <button class="btn btn-primary btn-lg" id="delete" type="submit" name="delete" value="Usun">Usuń</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <?php }
+                        if(filter_input(INPUT_POST, 'delete', FILTER_SANITIZE_FULL_SPECIAL_CHARS) == "Usun") {
+                            $idToDelete = $_POST['id'];
+                            $sql = "DELETE FROM orders WHERE orderId = '$idToDelete'";
+                            if($db->delete($sql)) {
+	                            echo '<div class="alert alert-success m-3">Zamówienie nr ' . $idToDelete . ' usunięte</div>';
+                            } else {
+	                            echo '<div class="alert alert-warning m-3">Nie udało się usunąć zamówienia</div>';
+                            }
+                        }
+                        ?>
 				</div>
 			</div>
 		</section>

@@ -113,6 +113,33 @@ class Database {
 		return $content;
 	}
 
+	public function selectUserTable($sql) {
+		$content = "";
+		$fields = ['id', 'userName', 'fullName', 'email', 'passwd', 'status', 'date'];
+		$pola = ['Id użytkownika', 'Login', 'Imię i nazwisko', 'Email', 'Hasło', 'Status', 'Data'];
+		if ($result = $this->mysqli->query($sql)) {
+			$colnumber = count($fields);
+
+			$content .= "<table class='table table-bordered'><tbody><tr class='table-primary'>";
+			foreach ($pola as $field) {
+				$content .= "<th>$field</th>";
+			}
+			$content .= "</tr>";
+
+			while ($row = $result->fetch_object()) {
+				$content .= "<tr>";
+				for ($i = 0; $i < $colnumber; $i++) {
+					$field = $fields[$i];
+					$content .= "<td>" . $row->$field . "</td>";
+				}
+				$content .= "</tr>";
+			}
+			$content .= "</tbody></table>";
+			$result->close();
+		}
+		return $content;
+	}
+
 	public function getMysqli() {
 		return $this->mysqli;
 	}

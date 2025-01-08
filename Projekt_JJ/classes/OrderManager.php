@@ -84,4 +84,14 @@ class OrderManager
 			echo '<div class="alert alert-warning m-3">Brak zamówień do wyświetlenia.</div>';
 		}
 	}
+
+	public function displayAllOrders($db) {
+		$sql = "SELECT * FROM orders";
+		$result = $db->selectOrder($sql);
+		if ($result !== "<table class='table table-bordered'><tbody><tr class='table-primary'><th>Nr zamówienia</th><th>Id użytkownika</th><th>Kursy</th><th>Imię i nazwisko</th><th>Email</th><th>Telefon</th><th>Adres</th><th>Dostawa</th><th>Suma</th><th>Data</th></tr></tbody></table>"){
+			echo $result;
+		} else {
+			echo '<div class="alert alert-warning m-3">Brak zamówień do wyświetlenia.</div>';
+		}
+	}
 }

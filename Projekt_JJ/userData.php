@@ -125,6 +125,46 @@ if(isset($_SESSION["loggedin"]) && $_SESSION["loggedin"] === true){
 							?>
 						</form>
 					</div>
+                    <?php
+                        if($userData['status'] == 2) {?>
+                    <div class="text-center m-5 justify-content-center">
+                        <h3 class="fw-bolder">Baza użytkowników</h3>
+                        <div class="d-flex justify-content-center">
+                            <?php
+                                $um->getAllUsersTable($db);
+                            ?>
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <h3 class="fw-bolder mb-4">Usuwanie użytkownika</h3>
+                        <form method="post" action="userData.php">
+                            <div class="justify-content-around row">
+                                <div class="form-floating mb-3 input-control col-5">
+                                    <input class="form-control" id="id" name="id" type="text" placeholder="Nr zamówienia">
+                                    <label for="fullName">Id użytkownika do usunięcia</label>
+                                </div>
+                                <div class="form-floating mb-3 input-control col-5">
+                                    <div class="d-grid">
+                                        <button class="btn btn-primary btn-lg" id="deleteUser" type="submit" name="deleteUser" value="Usun">Usuń</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <?php
+                        if(filter_input(INPUT_POST, 'deleteUser', FILTER_SANITIZE_FULL_SPECIAL_CHARS) === "Usun") {
+	                        $idToDelete = $_POST['id'];
+	                        $sql = "DELETE FROM users WHERE id = '$idToDelete'";
+	                        if($db->delete($sql) && $idToDelete > 1) {
+		                        echo '<div class="alert alert-success m-3 text-center">Użytkownik o id ' . $idToDelete . ' usunięty</div>';
+	                        } else if($idToDelete == 1) {
+		                        echo '<div class="alert alert-warning m-3 text-center">Nie można usunąć konta administratora</div>';
+                            } else {
+		                        echo '<div class="alert alert-warning m-3 text-center">Nie udało się usunąć użytkownika</div>';
+	                        }
+                        }
+                        }
+                    ?>
 				</div>
 			</div>
 		</div>
@@ -179,5 +219,4 @@ if(isset($_SESSION["loggedin"]) && $_SESSION["loggedin"] === true){
  <?php
 } else {
 	header("location:index.php");
-}
-?>
+}?>

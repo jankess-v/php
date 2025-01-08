@@ -170,6 +170,16 @@ class UserManager
 			echo "<div class='alert alert-danger m-5'><b>Błędne dane:</b> $errors</div>";
 		}
 	}
+
+	public function getAllUsersTable($db) {
+		$sql = "SELECT * FROM users";
+		$result = $db->selectUserTable($sql);
+		if ($result !== "<table class='table table-bordered'><tbody><tr class='table-primary'><th>Id użytkownika</th><th>Login</th><th>Imię i nazwisko</th><th>Email</th><th>Hasło</th><th>Status</th><th>Data</th></tr></tbody></table>"){
+			echo $result;
+		} else {
+			echo '<div class="alert alert-warning m-3">Brak zamówień do wyświetlenia</div>';
+		}
+	}
 }
 
 ?>
